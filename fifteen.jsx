@@ -12,6 +12,18 @@ var Cell = React.createClass({
 });
 
 var Board = React.createClass({
+    render : function() {
+        return (
+            <div className="fifteen-board">
+                {this.props.cells.map(function(number, key){
+                    return <Cell key={key} number={number} />;
+                })}
+            </div>
+        );
+    }    
+});
+
+var Game = React.createClass({
     getInitialState : function() {
         return { cells : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0] };
     },
@@ -21,7 +33,7 @@ var Board = React.createClass({
         var prev = cells[i];
         cells[i] = cells[j];
         cells[j] = prev;
-        this.setState({ cells: cells});
+        this.setState({ cells: cells, steps: this.state.steps + 1});
     },
     directions : {
         up : {
@@ -80,6 +92,30 @@ var Board = React.createClass({
         if (event.keyCode == 40) {
             this.move("up");
         }
+        if (this.oldKeyDownHandler !== null) {
+            this.oldKeyDownHandler(event);
+        }
+    },
+    win : function() {
+        return this.state.cells.filter(function(number, index) {return number === index + 1;}).length === 15;
+    },
+    click : function(event) {
+        var number = parseInt(event.target.textContent);
+        var numberIndex = this.state.cells.indexOf(number);
+        console.log("Clicked number " + number + " with index " + numberIndex);
+        var zeroIndex = this.state.cells.indexOf(0);
+        var dirs = [ "up", "down", "left", "right" ];
+        for (var i = 0; i<4; i++) {
+            var dir = this.directions[dirs[i]];
+            if (dir.newIndex(zeroIndex) === numberIndex) {
+                this.flip(zeroIndex, numberIndex);
+                break;
+            }
+        }
+    },
+    componentDidMount: function() {
+        this.init();
+        this.setKeyDownHandler();
     },
     init: function() {
         var count = parseInt(this.props.steps);
@@ -90,25 +126,32 @@ var Board = React.createClass({
             dirIndex = Math.floor(Math.random() * 4);
             if (this.move(dirs[dirIndex])) {
                 count--;
+                console.log("remaining " + count + " steps");
             }
         }
+        this.setState({steps: 0});
+    },
+    setKeyDownHandler : function() {
+        this.oldKeyDownHandler = window.onkeydown;
+        window.onkeydown = this.keyDown;
+    },
+    componentWillUnmount : function() {
+        window.onkeydown = this.oldKeyDownHandler;
     },
     render : function() {
-        var cells = this.state.cells;
         return (
-            <div className="fifteen-board">
-                {cells.map(function(number, key){
-                    return <Cell key={key} number={number} />;
-                })}
+            <div className="fifteen-game" onClick={this.click}>
+                <Board cells={this.state.cells} />
+                <div className="message">
+                    {this.win() ? "Вы победили" : ""}
+                </div>
+                <div className="steps">{this.state.steps}</div>
+                <button onClick={this.init} disabled={!this.win()}>Новая игра</button>
             </div>
         );
     }
 });
 
-var board = React.renderComponent(<Board steps="100" />, document.body, function() {
-    this.init();
-});
-
-window.onkeydown = board.keyDown;
+React.renderComponent(<Game steps="100" />, document.body);
 
 })();
