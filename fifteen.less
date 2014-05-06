@@ -1,26 +1,116 @@
-.fifteen-board {
-    height: 210px;
-    width: 210px;
-    border: solid black 1px;
-    padding: 10px;
-    overflow: hidden;
+@cell-size: 40px;
+@cell-border-size: 1px;
+@cell-margin-size: 5px;
+@cell-outer-size: @cell-size + 2 * @cell-border-size + 2 * @cell-margin-size;
+@cell-border-radius: 8px;
 
-    .cell {
-        width: 40px;
-        height: 40px;
-        border: solid black 1px;
-        margin: 5px;
-        display: table;
-        text-align: center;
-        float: left;
+@cell-slider-size: @cell-outer-size;
 
-        div {
-            display: table-cell;
-            vertical-align: middle;
+@board-size: 4 * @cell-outer-size;
+@board-border-size: 1px;
+@board-padding-size: 10px;
+@board-border-radius: 2 * @cell-border-radius;
+
+@-webkit-keyframes moveup {
+    from {
+        top: -@cell-outer-size;
+    }
+    to {
+        top: 0px;
+    }
+}
+
+@-webkit-keyframes movedown {
+    from {
+        top: @cell-outer-size;
+    }
+    to {
+        top: 0px;
+    }
+}
+
+@-webkit-keyframes moveleft {
+    from {
+        left: -@cell-outer-size;
+    }
+    to {
+        left: 0px;
+    }
+}
+
+@-webkit-keyframes moveright {
+    from {
+        left: @cell-outer-size;
+    }
+    to {
+        left: 0px;
+    }
+}
+
+.fifteen-game {
+    .fifteen-board {
+        height: @board-size;
+        width: @board-size;
+        border: solid black @board-border-size;
+        padding: @board-padding-size;
+        overflow: hidden;
+        border-radius: @board-border-radius;
+
+        .cell {
+            width: @cell-size;
+            height: @cell-size;
+            border: solid black @cell-border-size;
+            border-radius: @cell-border-radius;
+            margin: @cell-margin-size;
+            display: table;
+            text-align: center;
+            float: left;
+
+            div {
+                display: table-cell;
+                vertical-align: middle;
+            }
+        }
+        .cell.empty {
+            border-color: transparent;
+            border-style: solid;
+            display: block;
+        }
+
+        .slide {
+            width: @cell-slider-size;
+            height: @cell-slider-size;
+            display: block;
+            float: left;
+            position: relative;
+
+            .cell {
+                -webkit-animation-duration: 0.3s;
+                position: absolute;
+            }
+        }
+        .slide.up {
+            .cell {
+                -webkit-animation-name: moveup;
+            }
+        }
+        .slide.down {
+            .cell {
+                -webkit-animation-name: movedown;
+            }
+        }
+        .slide.left {
+            .cell {
+                -webkit-animation-name: moveleft;
+            }
+        }
+        .slide.right {
+            .cell {
+                -webkit-animation-name: moveright;
+            }
         }
     }
-    .cell.empty {
-        border: solid transparent 1px;
-        display: block;
+    button:disabled {
+        display: none;
     }
 }

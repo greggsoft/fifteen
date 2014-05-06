@@ -11,13 +11,27 @@ var Cell = React.createClass({
     }
 });
 
+var SlideCell = React.createClass({
+    render: function() {
+        classNameString = "slide " + this.props.direction;
+        return (
+            <div className={classNameString}>
+                <Cell number={this.props.number} />
+            </div>
+        );
+    }
+});
+
 var Board = React.createClass({
     render : function() {
         return (
             <div className="fifteen-board">
-                {this.props.cells.map(function(number, key){
-                    return <Cell key={key} number={number} />;
-                })}
+                {this.props.cells.map(function(number){
+                    if (number === this.props.move) {
+                        return <SlideCell key={number} number={number} direction={this.props.direction} />;
+                    }
+                    return <Cell key={number} number={number} />;
+                }.bind(this))}
             </div>
         );
     }    
@@ -33,7 +47,11 @@ var Game = React.createClass({
         var prev = cells[i];
         cells[i] = cells[j];
         cells[j] = prev;
-        this.setState({ cells: cells, steps: this.state.steps + 1});
+        this.setState({ cells: cells, steps: this.state.steps + 1, move: Math.max(cells[i], cells[j])});
+        setInterval(this.ummove, 1000);
+    },
+    unmove: function() {
+        this.setState({move: undefined});
     },
     directions : {
         up : {
@@ -74,6 +92,7 @@ var Game = React.createClass({
         var cells = this.state.cells;
         var zeroIndex = cells.indexOf(0);
         if (this.directions[direction].can(zeroIndex)) {
+            this.setState({direction: direction});
             this.flip(zeroIndex, this.directions[direction].newIndex(zeroIndex));
         }
         return this.directions[direction].can(zeroIndex);
@@ -108,6 +127,7 @@ var Game = React.createClass({
         for (var i = 0; i<4; i++) {
             var dir = this.directions[dirs[i]];
             if (dir.newIndex(zeroIndex) === numberIndex) {
+                this.setState({ direction: dirs[i] });
                 this.flip(zeroIndex, numberIndex);
                 break;
             }
@@ -141,11 +161,11 @@ var Game = React.createClass({
     render : function() {
         return (
             <div className="fifteen-game" onClick={this.click}>
-                <Board cells={this.state.cells} />
+                <Board cells={this.state.cells} move={this.state.move} direction={this.state.direction} />
                 <div className="message">
                     {this.win() ? "Вы победили" : ""}
                 </div>
-                <div className="steps">{this.state.steps}</div>
+                <div className="steps">Ходов: {this.state.steps}</div>
                 <button onClick={this.init} disabled={!this.win()}>Новая игра</button>
             </div>
         );
