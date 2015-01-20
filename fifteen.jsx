@@ -17,19 +17,29 @@ var mergeStyles = function() {
 }
 
 var Cell = React.createClass({
+    getInitialState : function() {
+        var state = {};
+        state.position = this.props.oldPosition;
+        return state;
+    },
+    componentDidMount : function() {
+        var state = {};
+        state.position = this.props.newPosition;
+        this.setState(state.position);
+    },
     render: function() {
         if (this.props.number === 0) {
             var emptyCellStyle = {
                 borderColor: "transparent",
                 display: "block",
             };
-            return <div className="cell empty" style={mergeStyles(this.props.style, emptyCellStyle)}></div>;
+            return <div className="cell empty" style={mergeStyles(this.props.style, emptyCellStyle, this.state.position)}></div>;
         }
         var innerDivStyle = {
                 display: "table-cell",
                 verticalAlign: "middle",
         };
-        return <div className="cell" style={this.props.style}><div style={innerDivStyle}>{this.props.number}</div></div>;
+        return <div className="cell" style={mergeStyles(this.props.style, this.state.position)}><div style={innerDivStyle}>{this.props.number}</div></div>;
     }
 });
 
@@ -77,17 +87,55 @@ var Board = React.createClass({
             transition: "0.3s",
         };
     },
+    getCellPosition : function(coords) {
+        var position = {};
+        position.left = coords.x * this.state.cellOuterSize + this.state.boardPaddingSize + this.state.cellMarginSize;
+        position.top  = coords.y * this.state.cellOuterSize + this.state.boardPaddingSize + this.state.cellMarginSize;
+        return position;
+    },
+    getOldCoords : function(coords) {
+        return {
+            up : function() {
+                return {
+                    x : coords.x,
+                    y : coords.y + 1,
+                };
+            },
+            down : function() {
+                return {
+                    x : coords.x,
+                    y : coords.y - 1,
+                };
+            },
+            left : function() {
+                return {
+                    x : coords.x + 1,
+                    y : coords.y,
+                };
+            },
+            right : function() {
+                return {
+                    x : coords.x - 1,
+                    y : coords.y,
+                };
+            },
+        }[this.props.direction]();
+    },
     render : function() {
         return (
-            <ReactTransitionGroup component={React.DOM.div} className="fifteen-board" style={this.getStyle()}>
-                {this.props.cells.map(function(number, position){
-                    var cellPosition = {};
-                    var x = position % 4, y = (position - x) / 4;
-                    cellPosition.left = x * this.state.cellOuterSize + this.state.boardPaddingSize + this.state.cellMarginSize;
-                    cellPosition.top = y * this.state.cellOuterSize + this.state.boardPaddingSize + this.state.cellMarginSize;
-                    return <Cell key={number} number={number} style={mergeStyles(this.getCellStyle(), cellPosition)} />;
+            <div className="fifteen-board" style={this.getStyle()}>
+                {this.props.cells.map(function(number, pos){
+                    var oldCellCoords = {}, newCellCoords = {};
+                    newCellCoords.x = pos % 4;
+                    newCellCoords.y = (pos - newCellCoords.x) / 4;
+                    if (this.props.move == number) {
+                        oldCellCoords = this.getOldCoords(newCellCoords);
+                    } else {
+                        oldCellCoords = newCellCoords;
+                    }
+                    return <Cell key={number} number={number} style={this.getCellStyle()} oldPosition={this.getCellPosition(oldCellCoords)} newPosition={this.getCellPosition(newCellCoords)} />;
                 }.bind(this))}
-            </ReactTransitionGroup>
+            </div>
         );
     }    
 });
@@ -102,6 +150,7 @@ var Game = React.createClass({
         var prev = cells[i];
         cells[i] = cells[j];
         cells[j] = prev;
+        console.log(cells);
         this.setState({ cells: cells, steps: this.state.steps + 1, move: Math.max(cells[i], cells[j])});
         setInterval(this.ummove, 1000);
     },
@@ -146,6 +195,7 @@ var Game = React.createClass({
         console.log("try to move " + direction);
         var cells = this.state.cells;
         var zeroIndex = cells.indexOf(0);
+        console.log("zero index is " + zeroIndex);
         if (this.directions[direction].can(zeroIndex)) {
             this.setState({direction: direction});
             this.flip(zeroIndex, this.directions[direction].newIndex(zeroIndex));
@@ -228,5 +278,6 @@ var Game = React.createClass({
 });
 
 React.renderComponent(<Game steps="100" />, document.body);
+// React.renderComponent(<Board cells={[1, 3, 2, 4, 5, 8, 6, 7, 9, 10, 11, 12, 0, 13, 15, 14]} move={13} direction="right" />, document.body);
 
 })();
