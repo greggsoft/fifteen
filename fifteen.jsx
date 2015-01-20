@@ -2,37 +2,92 @@
 
 (function() {
 
+var ReactTransitionGroup = React.addons.TransitionGroup;
+    
+var mergeStyles = function() {
+    var resultStyle = {};
+    for (var i=0;i < arguments.length;i++) {
+        if (arguments[i]) {
+            for (var attr in arguments[i]) {
+                resultStyle[attr] = arguments[i][attr];
+            }
+        }
+    }
+    return resultStyle;
+}
+
 var Cell = React.createClass({
     render: function() {
         if (this.props.number === 0) {
-            return <div className="cell empty"></div>;
+            var emptyCellStyle = {
+                borderColor: "transparent",
+                display: "block",
+            };
+            return <div className="cell empty" style={mergeStyles(this.props.style, emptyCellStyle)}></div>;
         }
-        return <div className="cell"><div>{this.props.number}</div></div>;
-    }
-});
-
-var SlideCell = React.createClass({
-    render: function() {
-        classNameString = "slide " + this.props.direction;
-        return (
-            <div className={classNameString}>
-                <Cell number={this.props.number} />
-            </div>
-        );
+        var innerDivStyle = {
+                display: "table-cell",
+                verticalAlign: "middle",
+        };
+        return <div className="cell" style={this.props.style}><div style={innerDivStyle}>{this.props.number}</div></div>;
     }
 });
 
 var Board = React.createClass({
+    getInitialState : function() {
+        var state = {};
+        
+        state.cellSize = 40;
+        state.cellBorderSize = 1;
+        state.cellMarginSize = 5;
+        state.cellOuterSize = state.cellSize + 2 * state.cellBorderSize + 2 * state.cellMarginSize;
+        state.cellBorderRadius = 8;
+
+        state.boardSize = 4 * state.cellOuterSize;
+        state.boardBorderSize = 1;
+        state.boardPaddingSize = 10;
+        state.boardBorderRadius = 2 * state.cellBorderRadius;
+        state.boardBorderRadius = 2 * state.cellBorderRadius;
+
+        return state;
+    },
+    getStyle : function() {
+        return {
+            height:   this.state.boardSize,
+            width:    this.state.boardSize,
+            border:   "solid black",
+            borderWidth: this.state.boardBorderSize,
+            padding:  this.state.boardPaddingSize,
+            overflow: "hidden",
+            borderRadius: this.state.boardBorderRadius,
+        };
+    },
+    getCellStyle : function() {
+        return {
+            width: this.state.cellSize,
+            height: this.state.cellSize,
+            borderStyle: "solid",
+            borderColor: "black",
+            borderWidth: this.state.cellBorderSize,
+            borderRadius: this.state.cellBorderRadius,
+            margin: this.state.cellMarginSize,
+            display: "table",
+            textAlign: "center",
+            position: "absolute",
+            transition: "0.3s",
+        };
+    },
     render : function() {
         return (
-            <div className="fifteen-board">
-                {this.props.cells.map(function(number){
-                    if (number === this.props.move) {
-                        return <SlideCell key={number} number={number} direction={this.props.direction} />;
-                    }
-                    return <Cell key={number} number={number} />;
+            <ReactTransitionGroup component={React.DOM.div} className="fifteen-board" style={this.getStyle()}>
+                {this.props.cells.map(function(number, position){
+                    var cellPosition = {};
+                    var x = position % 4, y = (position - x) / 4;
+                    cellPosition.left = x * this.state.cellOuterSize + this.state.boardPaddingSize + this.state.cellMarginSize;
+                    cellPosition.top = y * this.state.cellOuterSize + this.state.boardPaddingSize + this.state.cellMarginSize;
+                    return <Cell key={number} number={number} style={mergeStyles(this.getCellStyle(), cellPosition)} />;
                 }.bind(this))}
-            </div>
+            </ReactTransitionGroup>
         );
     }    
 });
@@ -166,7 +221,7 @@ var Game = React.createClass({
                     {this.win() ? "Вы победили" : ""}
                 </div>
                 <div className="steps">Ходов: {this.state.steps}</div>
-                <button onClick={this.init} disabled={!this.win()}>Новая игра</button>
+                {this.win() ? <button onClick={this.init}>Новая игра</button> : "" }
             </div>
         );
     }
