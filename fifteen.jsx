@@ -2,8 +2,6 @@
 
 (function() {
 
-var ReactTransitionGroup = React.addons.TransitionGroup;
-    
 var mergeStyles = function() {
     var resultStyle = {};
     for (var i=0;i < arguments.length;i++) {
@@ -79,22 +77,22 @@ var Board = React.createClass({
     },
     render : function() {
         return (
-            <ReactTransitionGroup component={React.DOM.div} className="fifteen-board" style={this.getStyle()}>
+            <div className="fifteen-board" style={this.getStyle()}>
                 {this.props.cells.map(function(number, position){
                     var cellPosition = {};
                     var x = position % 4, y = (position - x) / 4;
-                    cellPosition.left = x * this.state.cellOuterSize + this.state.boardPaddingSize + this.state.cellMarginSize;
-                    cellPosition.top = y * this.state.cellOuterSize + this.state.boardPaddingSize + this.state.cellMarginSize;
+                    cellPosition.left = x * this.state.cellOuterSize + this.state.boardPaddingSize + 2 * this.state.cellMarginSize;
+                    cellPosition.top = y * this.state.cellOuterSize + this.state.boardPaddingSize + 2 * this.state.cellMarginSize;
                     return <Cell key={number} number={number} style={mergeStyles(this.getCellStyle(), cellPosition)} />;
                 }.bind(this))}
-            </ReactTransitionGroup>
+            </div>
         );
     }    
 });
 
 var Game = React.createClass({
     getInitialState : function() {
-        return { cells : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0] };
+        return { cells : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0], started : false, lastDirIndex: 4 };
     },
     flip : function(i, j) {
         console.log("flip " + i + " and " + j);
@@ -103,7 +101,7 @@ var Game = React.createClass({
         cells[i] = cells[j];
         cells[j] = prev;
         this.setState({ cells: cells, steps: this.state.steps + 1, move: Math.max(cells[i], cells[j])});
-        setInterval(this.ummove, 1000);
+        setTimeout(this.ummove, 1000);
     },
     unmove: function() {
         this.setState({move: undefined});
@@ -189,22 +187,30 @@ var Game = React.createClass({
         }
     },
     componentDidMount: function() {
-        this.init();
-        this.setKeyDownHandler();
+       setTimeout(this.init, 100);
     },
+    dirs : [ "up", "down", "left", "right" ],
+    oppositeDirIndex : [ 1, 0, 3, 2, 4],
     init: function() {
         var count = parseInt(this.props.steps);
         console.log("init game with " + count + " steps");
-        var dirs = [ "up", "down", "left", "right" ];
-        var dirIndex = 0;
-        while (count > 0) {
-            dirIndex = Math.floor(Math.random() * 4);
-            if (this.move(dirs[dirIndex])) {
-                count--;
-                console.log("remaining " + count + " steps");
-            }
+        this.setState({initialStepCount : count});
+        var initTimerID = setInterval(this.initStep, 60);
+        this.setState({initTimer : initTimerID});
+    },
+    initStep : function() {
+        if (this.state.initialStepCount <= 0) return this.initEnd();
+        var dirIndex = Math.floor(Math.random() * 4);
+        if (dirIndex != this.oppositeDirIndex[this.state.lastDirIndex] && this.move(this.dirs[dirIndex])) {
+            var newCount = this.state.initialStepCount - 1;
+            this.setState({initialStepCount : newCount, lastDirIndex: dirIndex});
+            console.log("remaining " + newCount + " steps");
         }
-        this.setState({steps: 0});
+    },
+    initEnd : function() {
+        clearInterval(this.state.initTimer);
+        this.setState({steps: 0, started: true});
+        this.setKeyDownHandler();
     },
     setKeyDownHandler : function() {
         this.oldKeyDownHandler = window.onkeydown;
@@ -215,12 +221,10 @@ var Game = React.createClass({
     },
     render : function() {
         return (
-            <div className="fifteen-game" onClick={this.click}>
+            <div className="fifteen-game" onClick={this.state.started ? this.click : ""}>
                 <Board cells={this.state.cells} move={this.state.move} direction={this.state.direction} />
-                <div className="message">
-                    {this.win() ? "Вы победили" : ""}
-                </div>
-                <div className="steps">Ходов: {this.state.steps}</div>
+                {this.win() ? <div className="message">Вы победили</div> : ""}
+                {this.state.started ? <div className="steps">Ходов: {this.state.steps}</div> : ""}
                 {this.win() ? <button onClick={this.init}>Новая игра</button> : "" }
             </div>
         );
