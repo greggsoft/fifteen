@@ -1,8 +1,8 @@
 Fifteen puzzle
 ==============
 
-Examine my [Fifteen puzzle](http://greggsoft.github.io/fifteen/).
+Vanilla JS puzzle game.
 
-I realize this game by [ReactJS](https://facebook.github.io/react/).
+Try out my [Fifteen puzzle](http://greggsoft.github.io/fifteen/).
 
 More about original game on [Wikipedia](https://en.wikipedia.org/wiki/15_puzzle).
