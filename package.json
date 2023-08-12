@@ -1,0 +1,16 @@
+{
+  "name": "fifteen",
+  "version": "1.0.0",
+  "private": true,
+  "license":"UNLICENSED",
+  "author": {
+    "name": "Mikhail Menshenin",
+    "email": "greggsoft@gmail.com"
+  },
+  "scripts": {
+    "start": "http-server www -a 127.0.0.1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
