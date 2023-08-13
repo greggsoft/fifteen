@@ -1,4 +1,5 @@
 import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
+import * as TWEEN from '@tweenjs/tween.js'
 
 const app = new Application({ antialias: true, resizeTo: window, backgroundAlpha: 0 })
 const screenWidth = app.screen.width
@@ -25,7 +26,7 @@ board.x = center.x
 board.y = center.y
 
 app.stage.addChild(board)
-app.stage.addChild(axes)
+// app.stage.addChild(axes)
 
 for (let i = 0; i < 15; i++) {
     const num = i + 1
@@ -85,9 +86,20 @@ function onTileClick(this: Container) {
     console.log('tileSizeSqr: ' + (tileSize ** 2))
     if (destSqr === tileSize ** 2) {
         const tilePosition = { x: tile.x, y: tile.y }
-        tile.x = emptyTilePosition.x
-        tile.y = emptyTilePosition.y
+        const endPosition = { x: emptyTilePosition.x, y: emptyTilePosition.y }
         emptyTilePosition.x = tilePosition.x
         emptyTilePosition.y = tilePosition.y
+        const tween = new TWEEN.Tween(tilePosition, false)
+            .to(endPosition, 500)
+            .easing(TWEEN.Easing.Quadratic.InOut)
+            .onUpdate(() => {
+                tile.x = tilePosition.x
+                tile.y = tilePosition.y
+            })
+            .start()
+
+        app.ticker.add(() => {
+            tween.update()
+        })
     }
 }
