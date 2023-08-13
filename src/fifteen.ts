@@ -1,5 +1,4 @@
 import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
-// import '@pixi/graphics-extras'
 
 const app = new Application({ antialias: true, resizeTo: window, backgroundAlpha: 0 })
 const screenWidth = app.screen.width
@@ -37,6 +36,8 @@ for (let i = 0; i < 15; i++) {
     board.addChild(tile)
 }
 
+const emptyTilePosition = { x: 3 * tileSize, y: 3 * tileSize }
+
 // board.pivot.x = board.width / 2
 // board.pivot.y = board.height / 2
 board.pivot.x = tileSize * 2
@@ -67,8 +68,26 @@ function createTile(num: number) {
 
     container.addChild(label)
 
+    container.cursor = 'pointer'
+    container.eventMode = 'static'
+    container.on('pointerdown', onTileClick)
+
     // container.pivot.x = tileSize / 2
     // container.pivot.y = tileSize / 2
 
     return container
+}
+
+function onTileClick(this: Container) {
+    const tile = this
+    const destSqr = (tile.x - emptyTilePosition.x) ** 2 + (tile.y - emptyTilePosition.y) ** 2
+    console.log('DEST: ' + destSqr)
+    console.log('tileSizeSqr: ' + (tileSize ** 2))
+    if (destSqr === tileSize ** 2) {
+        const tilePosition = { x: tile.x, y: tile.y }
+        tile.x = emptyTilePosition.x
+        tile.y = emptyTilePosition.y
+        emptyTilePosition.x = tilePosition.x
+        emptyTilePosition.y = tilePosition.y
+    }
 }
