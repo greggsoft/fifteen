@@ -8,6 +8,11 @@
     "email": "greggsoft@gmail.com"
   },
   "source": "src/index.html",
+  "targets": {
+    "default": {
+      "distDir": "./www"
+    }
+  },
   "browserslist": "> 0.5%, last 2 versions, not dead",
   "scripts": {
     "start": "parcel",
